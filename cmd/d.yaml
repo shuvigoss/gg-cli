@@ -1,0 +1,4 @@
+remote:
+  local: http://localhost:8080/
+  remote: http://example.com/
+remoteDefault: local
