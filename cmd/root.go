@@ -39,6 +39,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(remoteCmd)
+	rootCmd.AddCommand(gCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -50,6 +51,7 @@ func initConfig() {
 	}
 
 	createDefaultConfigFile(path.Join(home, ".gg-cli.yaml"))
+	createLocalCacheDir(path.Join(home, ".gg"))
 
 	viper.AddConfigPath(home)
 	viper.SetConfigName(".gg-cli")
@@ -63,10 +65,18 @@ func initConfig() {
 
 }
 
+func createLocalCacheDir(dir string) {
+	if !Exists(dir) {
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			fmt.Printf("初始化 %s 本地缓存路径异常\n", err)
+		}
+	}
+}
+
 func createDefaultConfigFile(f string) {
 	if !Exists(f) {
 		if err := ioutil.WriteFile(f, []byte(defaultConfig), os.ModePerm); err != nil {
-			fmt.Printf("初始化 %s 文件异常", f)
+			fmt.Printf("初始化 %s 文件异常\n", f)
 		}
 	}
 }

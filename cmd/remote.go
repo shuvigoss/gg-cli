@@ -59,7 +59,7 @@ var addCmd = &cobra.Command{
 		if err := viper.WriteConfigAs(path.Join(home, ".gg-cli.yaml")); err == nil {
 			fmt.Printf("新增远程服务地址成功 #key = %s, #url = %s \n", args[0], args[1])
 		} else {
-			fmt.Printf("新增远程服务地址失败 %v", err)
+			fmt.Printf("新增远程服务地址失败 %v\n", err)
 		}
 	},
 }
@@ -88,7 +88,7 @@ var delCmd = &cobra.Command{
 		if err := viper.WriteConfigAs(path.Join(home, ".gg-cli.yaml")); err == nil {
 			fmt.Printf("删除远程服务地址成功 #key = %s\n", args[0])
 		} else {
-			fmt.Printf("删除远程服务地址失败 %v", err)
+			fmt.Printf("删除远程服务地址失败 %v\n", err)
 		}
 	},
 }
@@ -108,7 +108,7 @@ var changeCmd = &cobra.Command{
 		var s = remotes.(map[string]interface{})
 		_, ok := s[args[0]]
 		if !ok {
-			fmt.Printf("没有 %s 的地址别名", args[0])
+			fmt.Printf("没有 %s 的地址别名\n", args[0])
 			return
 		}
 
@@ -117,9 +117,16 @@ var changeCmd = &cobra.Command{
 		if err := viper.WriteConfigAs(path.Join(home, ".gg-cli.yaml")); err == nil {
 			fmt.Printf("变更远程服务地址成功 #key = %s\n", args[0])
 		} else {
-			fmt.Printf("变更远程服务地址失败 %v", err)
+			fmt.Printf("变更远程服务地址失败 %v\n", err)
 		}
 	},
+}
+
+func GetRemoteUrl() string {
+	remotes := viper.Get("remote")
+	remoteDefault := viper.GetString("remoteDefault")
+	var s = remotes.(map[string]interface{})
+	return s[remoteDefault].(string)
 }
 
 func init() {
