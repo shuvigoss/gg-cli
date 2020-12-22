@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"gg-cli/common"
@@ -38,7 +36,7 @@ func CompareAndSync(name, version string) bool {
 	return doCached(name, realVersion)
 }
 
-func getZipFile(children []os.FileInfo, name string) string {
+func GetZipFile(children []os.FileInfo, name string) string {
 	for _, f := range children {
 		match, _ := regexp.Match("^"+name+".*\\.(zip|gz|tar)$", []byte(f.Name()))
 		if match {
@@ -54,7 +52,7 @@ func doCached(name, version string) bool {
 	var remoteSha256 = getRemoteSha256(name, version)
 	if Exists(theDir) {
 		readDir, _ := ioutil.ReadDir(theDir)
-		zipFile := getZipFile(readDir, name)
+		zipFile := GetZipFile(readDir, name)
 		sha256File := path.Join(theDir, zipFile+".sha256")
 		localSha256, err := ioutil.ReadFile(sha256File)
 		if err != nil {
@@ -137,22 +135,6 @@ func getFileName(content string) string {
 	return split2[1]
 }
 
-func getLocalSha256(filePath string) (string, error) {
-	var hashValue string
-	file, err := os.Open(filePath)
-	if err != nil {
-		return hashValue, err
-	}
-	defer file.Close()
-	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		return hashValue, err
-	}
-	hashInBytes := hash.Sum(nil)
-	hashValue = hex.EncodeToString(hashInBytes)
-	return hashValue, nil
-}
-
 func getRemoteSha256(name, version string) string {
 	var sha256Str string
 	remoteUrl, _ := url.Parse(GetRemoteUrl())
@@ -201,15 +183,18 @@ func getTarget(name string, version string, result []GgResult) string {
 	}
 
 	exactIt := it.(GgResult)
-	sort.Strings(exactIt.Versions)
+	return GetRealVersion(name, version, exactIt.Versions)
+}
 
+func GetRealVersion(name string, version string, v []string) string {
 	find := false
 	//取当前最大版本
 	if version == "" {
-		version = exactIt.Versions[len(exactIt.Versions)-1]
+		sort.Strings(v)
+		version = v[len(v)-1]
 		find = true
 	} else {
-		for _, i := range exactIt.Versions {
+		for _, i := range v {
 			if i == version {
 				find = true
 				break
