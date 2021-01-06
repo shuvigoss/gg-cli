@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"path"
+	"sort"
 )
 
 // remoteCmd represents the remote command
@@ -28,13 +29,13 @@ var lsCmd = &cobra.Command{
 		remotes := viper.Get("remote")
 		remoteDefault := viper.GetString("remoteDefault")
 		var s = remotes.(map[string]interface{})
-		for k, v := range s {
+		sortMapForEach(s, func(k, v string) {
 			if k == remoteDefault {
 				color.Red(fmt.Sprintf("* %s %s (current)", k, v))
 			} else {
 				fmt.Println(fmt.Sprintf("  %s %s", k, v))
 			}
-		}
+		})
 	},
 }
 
@@ -53,15 +54,19 @@ var addCmd = &cobra.Command{
 		var s = remotes.(map[string]interface{})
 		s[args[0]] = args[1]
 
-		home, _ := homedir.Dir()
-
 		viper.Set("remote", s)
-		if err := viper.WriteConfigAs(path.Join(home, ".gg-cli.yaml")); err == nil {
-			fmt.Printf("新增远程服务地址成功 #key = %s, #url = %s \n", args[0], args[1])
-		} else {
-			fmt.Printf("新增远程服务地址失败 %v\n", err)
-		}
+		syncToLocal()
 	},
+}
+
+func syncToLocal() {
+	home, _ := homedir.Dir()
+
+	if err := viper.WriteConfigAs(path.Join(home, ".gg-cli.yaml")); err == nil {
+		fmt.Printf("操作成功")
+	} else {
+		fmt.Printf("操作失败 %v\n", err)
+	}
 }
 
 var delCmd = &cobra.Command{
@@ -83,13 +88,8 @@ var delCmd = &cobra.Command{
 		if before == end {
 			return
 		}
-		home, _ := homedir.Dir()
 		viper.Set("remote", s)
-		if err := viper.WriteConfigAs(path.Join(home, ".gg-cli.yaml")); err == nil {
-			fmt.Printf("删除远程服务地址成功 #key = %s\n", args[0])
-		} else {
-			fmt.Printf("删除远程服务地址失败 %v\n", err)
-		}
+		syncToLocal()
 	},
 }
 
@@ -111,14 +111,8 @@ var changeCmd = &cobra.Command{
 			fmt.Printf("没有 %s 的地址别名\n", args[0])
 			return
 		}
-
-		home, _ := homedir.Dir()
 		viper.Set("remoteDefault", args[0])
-		if err := viper.WriteConfigAs(path.Join(home, ".gg-cli.yaml")); err == nil {
-			fmt.Printf("变更远程服务地址成功 #key = %s\n", args[0])
-		} else {
-			fmt.Printf("变更远程服务地址失败 %v\n", err)
-		}
+		syncToLocal()
 	},
 }
 
@@ -134,4 +128,16 @@ func init() {
 	remoteCmd.AddCommand(addCmd)
 	remoteCmd.AddCommand(delCmd)
 	remoteCmd.AddCommand(changeCmd)
+}
+
+func sortMapForEach(resource map[string]interface{}, callback func(k, v string)) {
+	keys := make([]string, 0, len(resource))
+	for k := range resource {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		callback(k, resource[k].(string))
+	}
 }

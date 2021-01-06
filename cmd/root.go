@@ -48,6 +48,7 @@ func initConfig() {
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+		//panic()
 	}
 
 	createDefaultConfigFile(path.Join(home, ".gg-cli.yaml"))
